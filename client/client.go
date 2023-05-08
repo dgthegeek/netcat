@@ -8,49 +8,59 @@ import (
 )
 
 func main() {
-	user, err := net.Dial("tcp", "localhost:8080")
+	port := ""
+	args := os.Args[1:]
+	if len(args) == 1 {
+		port = args[0]
+	} else {
+		fmt.Println("[USAGE]:go run . $port")
+		os.Exit(0)
+	}
+	user, err := net.Dial("tcp", "localhost:"+port)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	// reader := bufio.NewReader(os.Stdin)
+	// fmt.Print("Enter your name: ")
+	// name, _ := reader.ReadString('\n')
+	// fmt.Fprintf(user, name)
 
 	//Creating two chanell one for the message and one for the evantual errors
 	messages := make(chan string)
 	errors := make(chan error)
 
 	// goroutine to read messages from the server
-	// go func(){
-	// 	for {
-	// 		message, err := bufio.NewReader(user).ReadString('\n')
-	// 		if err != nil{
-	// 			errors <- err
-	// 		}
-	// 		messages <- message
-	// 	}
-	// }()
+	go func() {
+		for {
+			message, err := bufio.NewReader(user).ReadString('\n')
+			if err != nil {
+				errors <- err
+			}
+			messages <- message
+		}
+	}()
 
-	//goroutine to read read input from the user and send it to the server
-	go func(){
+	// goroutine to read input from the user and send it to the server
+	go func() {
 		for {
 			reader := bufio.NewReader(os.Stdin)
-			fmt.Print(">")
+			fmt.Print(">>")
 			text, _ := reader.ReadString('\n')
-			fmt.Fprintf(user, text+"\n")
-			//message, _ := bufio.NewReader(user).ReadString('\n')
-			
+			fmt.Fprintf(user, text)
 		}
 	}()
 
 	// Listen for messages or errors
 	for {
 		select {
-		case message := <- messages:
-			fmt.Println("Message from the server:" + message)
-		case err :=  <- errors:
-			fmt.Println("error", err)
+		case message := <-messages:
+			fmt.Print(message)
+		case err := <-errors:
+			fmt.Print("error", err)
 			os.Exit(1)
 		}
 	}
 
-	
-}   
+}
