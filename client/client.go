@@ -22,11 +22,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// reader := bufio.NewReader(os.Stdin)
-	// fmt.Print("Enter your name: ")
-	// name, _ := reader.ReadString('\n')
-	// fmt.Fprintf(user, name)
-
 	//Creating two chanell one for the message and one for the evantual errors
 	messages := make(chan string)
 	errors := make(chan error)
