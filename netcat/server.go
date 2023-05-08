@@ -5,17 +5,28 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 )
 
 func main() {
-	// Listening to the port 8080
-	listener, err := net.Listen("tcp", ":8080")
+	port := "8989"
+	args := os.Args[1:]
+	if len(args) == 0 {
+		port = port
+	} else if len(args) == 1 {
+		port = args[0]
+	} else {
+		fmt.Println("[USAGE]: ./TCPChat $port")
+		os.Exit(0)
+	}
+	// Listening to the port
+	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		fmt.Println("Something went wrong : ", err)
 		return
 	}
 	defer listener.Close()
-	fmt.Println("Listenning to port :8080")
+	fmt.Println("Listenning to port :", port)
 
 	// boocle to accept the connections
 	for i := 0; i < 11; i++ {
@@ -24,11 +35,23 @@ func main() {
 			fmt.Println(err)
 			continue
 		}
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Enter your name: ")
-		name, _ := reader.ReadString('\n')
 
-		fmt.Println("New connection from : ", name)
+		// Print out the ubuntu logo
+		file, err := os.Open("ubuntu.txt")
+		if err != nil {
+			fmt.Println("Error reading the ubuntu text file", err)
+		}
+		defer file.Close()
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			fmt.Fprintln(user, string(scanner.Text()))
+		}
+
+		// Send a welcome messgae to the client
+		fmt.Fprintf(user, "[ENTER YOUR NAME]:\n")
+		reader := bufio.NewReader(user)
+		name, _ := reader.ReadString('\n')
+		fmt.Fprintf(user, "Bienvenue sur le serveur %s !", name)
 
 		//Treat the connection in a go roution
 		go handleConnection(user, name)
@@ -39,8 +62,6 @@ func handleConnection(user net.Conn, name string) {
 	// cut the connection the the function not runing
 	defer user.Close()
 
-	// Let the client know that he is connected successfully
-
 	// Retrieve and read the data sent by the client
 	buffer := make([]byte, 1024)
 	for {
@@ -50,7 +71,12 @@ func handleConnection(user net.Conn, name string) {
 			return
 		}
 		message := string(buffer[:n])
-		fmt.Printf("Message received from %s: %s", user.RemoteAddr(), message)
+		now := time.Now()
+		formatedTime := now.Format("2006-01-02 15:04:05")
+
+		
+
+		fmt.Printf("[%s][%s]:%s" ,formatedTime, name, message)
 	}
 	//DIffuser le message dans les autre client connectes
 }
