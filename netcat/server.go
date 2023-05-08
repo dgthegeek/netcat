@@ -51,14 +51,21 @@ func main() {
 		fmt.Fprintf(user, "[ENTER YOUR NAME]:\n")
 		reader := bufio.NewReader(user)
 		name, _ := reader.ReadString('\n')
-		fmt.Fprintf(user, "Bienvenue sur le serveur %s !", name)
+		fmt.Fprintf(user, "Welcome to the server %s !", name)
 
 		//Treat the connection in a go roution
-		go handleConnection(user, name)
+		go handleConnection(user, name, &connections)
 	}
 }
 
-func handleConnection(user net.Conn, name string) {
+// List of clients
+var connections []net.Conn
+
+func handleConnection(user net.Conn, name string, connections *[]net.Conn) {
+	fmt.Println(connections)
+	// add user connection to list of connections
+	*connections = append(*connections, user)
+
 	// cut the connection the the function not runing
 	defer user.Close()
 
@@ -74,9 +81,11 @@ func handleConnection(user net.Conn, name string) {
 		now := time.Now()
 		formatedTime := now.Format("2006-01-02 15:04:05")
 
-		
+		// broadcast message to all clients
+		for _, conn := range *connections {
 
-		fmt.Printf("[%s][%s]:%s" ,formatedTime, name, message)
+			fmt.Fprintf(conn, "[%s][%s]:%s", formatedTime, name, message)
+
+		}
 	}
-	//DIffuser le message dans les autre client connectes
 }
