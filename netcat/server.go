@@ -55,6 +55,11 @@ func main() {
 		name, _ := reader.ReadString('\n')
 		name = name[:len(name)-1]
 
+		now := time.Now()
+		formatedTime := now.Format("2006-01-02 15:04:05")
+		fmt.Fprint(user, "["+formatedTime+"]"+"["+name+"]:")
+
+
 		// Print th history odf the chat
 		historychat, err := os.Open("chathistory.txt")
 		if err != nil {
@@ -65,11 +70,6 @@ func main() {
 		for scanner1.Scan() {
 			fmt.Fprintln(user, string(scanner1.Text()))
 		}
-
-		// now := time.Now()
-		// formatedTime := now.Format("2006-01-02 15:04:05")
-		// fmt.Fprint(user, "[" + formatedTime + "]" + "[" + name + "]:")
-
 
 		//Treat the connection in a go roution
 		go handleConnection(user, name, &connections)
@@ -100,14 +100,15 @@ func handleConnection(user net.Conn, name string, connections *[]net.Conn) {
 		now := time.Now()
 		formatedTime := now.Format("2006-01-02 15:04:05")
 
+		fmt.Fprint(user, "[" + formatedTime + "]" + "[" + name + "]:")
 		// broadcast message to all clients
 		for _, conn := range *connections {
 			if conn != user{
-				fmt.Fprintln(conn)
-				fmt.Fprint(conn, "["+formatedTime+"]"+"["+name+"]:"+message)
+				fmt.Fprint(conn, "\n["+formatedTime+"]"+"["+name+"]:"+message)
+				fmt.Fprint(conn, "["+formatedTime+"]"+"["+name+"]:")
+
 			}
 		}
-		//fmt.Fprint(user, "[" + formatedTime + "]" + "[" + name + "]:")
 
 		WriteHistory("[" + formatedTime + "]" + "[" + name + "]:" + message)
 	}
